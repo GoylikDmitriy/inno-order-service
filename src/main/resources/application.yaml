@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/order-service-db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:1234}
+  jpa:
+    database-platform: ${SPRING_JPA_DATABASE_PLATFORM:org.hibernate.dialect.PostgreSQLDialect}
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+  liquibase:
+    enabled: true
+    change-log: ${SPRING_LIQUIBASE_CHANGELOG:classpath:db/changelog/db.changelog-master.yaml}
+    default-schema: public
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+  timelimiter:
+    instances:
+      default:
+        timeoutDuration: 5s
+
+server:
+  port: 8083
+
+client:
+  user-service:
+    url: ${CLIENT_USER_SERVICE_URL:http://localhost:8081}
+
+app:
+  internal:
+    api-keys:
+      order-service: ${ORDER_SERVICE_API_KEY:order-service:key-123}
