@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -36,10 +37,11 @@ public class OrderController {
      * @return the created order with user info
      */
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN') or #request.userId() == authentication.principal.userId")
-    public OrderResponse createOrder(@Valid @RequestBody CreateOrderRequest request) {
-        return orderService.createOrder(request);
+    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(orderService.createOrder(request));
     }
 
     /**
@@ -52,8 +54,8 @@ public class OrderController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @orderSecurity.isOrderOwner(#id)")
-    public OrderResponse getOrderById(@Positive @PathVariable Long id) {
-        return orderService.getOrderById(id);
+    public ResponseEntity<OrderResponse> getOrderById(@Positive @PathVariable Long id) {
+        return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     /**
@@ -66,9 +68,9 @@ public class OrderController {
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Page<OrderResponse> getAll(Pageable pageable,
+    public ResponseEntity<Page<OrderResponse>> getAll(Pageable pageable,
                                       @ModelAttribute FilterRequest request) {
-        return orderService.getAll(pageable, request);
+        return ResponseEntity.ok(orderService.getAll(pageable, request));
     }
 
     /**
@@ -82,9 +84,9 @@ public class OrderController {
      */
     @GetMapping("/users/{userId}")
     @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.userId")
-    public Page<OrderResponse> getOrdersByUserId(@Positive @PathVariable Long userId,
+    public ResponseEntity<Page<OrderResponse>> getOrdersByUserId(@Positive @PathVariable Long userId,
                                                  Pageable pageable) {
-        return orderService.getOrdersByUserId(userId, pageable);
+        return ResponseEntity.ok(orderService.getOrdersByUserId(userId, pageable));
     }
 
     /**
@@ -98,9 +100,9 @@ public class OrderController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @orderSecurity.isOrderOwner(#id)")
-    public OrderResponse updateOrder(@Positive @PathVariable Long id,
+    public ResponseEntity<OrderResponse> updateOrder(@Positive @PathVariable Long id,
                                      @Valid @RequestBody UpdateOrderRequest request) {
-        return orderService.updateOrder(id, request);
+        return ResponseEntity.ok(orderService.updateOrder(id, request));
     }
 
     /**
@@ -113,7 +115,8 @@ public class OrderController {
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN') or @orderSecurity.isOrderOwner(#id)")
-    public void deleteOrder(@Positive @PathVariable Long id) {
+    public ResponseEntity<Void> deleteOrder(@Positive @PathVariable Long id) {
         orderService.deleteOrder(id);
+        return ResponseEntity.noContent().build();
     }
 }
