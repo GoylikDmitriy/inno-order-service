@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
-public class OrderControllerTest extends BaseIntegrationTest {
+class OrderControllerTest extends BaseIntegrationTest {
     @Autowired
     private OrderRepository orderRepository;
 

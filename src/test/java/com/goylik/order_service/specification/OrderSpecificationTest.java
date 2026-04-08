@@ -22,4 +22,47 @@ class OrderSpecificationTest {
 
         assertThat(spec).isNotNull();
     }
+
+    @Test
+    void createdBetween_ShouldBuildSpecification() {
+        LocalDateTime from = LocalDateTime.now().minusDays(7);
+        LocalDateTime to = LocalDateTime.now();
+
+        Specification<Order> spec = OrderSpecification
+                .createdBetween(from, to);
+
+        assertThat(spec).isNotNull();
+    }
+
+    @Test
+    void createdBetween_ShouldBuildSpecification_WhenFromDateIsNull() {
+        LocalDateTime from = null;
+        LocalDateTime to = LocalDateTime.now();
+
+        Specification<Order> spec = OrderSpecification
+                .createdBetween(from, to);
+
+        assertThat(spec).isNotNull();
+    }
+
+    @Test
+    void createdBetween_ShouldBuildSpecification_WhenToDateIsNull() {
+        LocalDateTime from = LocalDateTime.now().minusDays(7);
+        LocalDateTime to = null;
+
+        Specification<Order> spec = OrderSpecification
+                .createdBetween(from, to);
+
+        assertThat(spec).isNotNull();
+    }
+
+    @Test
+    void statusIn_ShouldBuildSpecification() {
+        List<OrderStatus> statuses = List.of(OrderStatus.PENDING, OrderStatus.CONFIRMED);
+
+        Specification<Order> spec = OrderSpecification
+                .statusIn(statuses);
+
+        assertThat(spec).isNotNull();
+    }
 }
