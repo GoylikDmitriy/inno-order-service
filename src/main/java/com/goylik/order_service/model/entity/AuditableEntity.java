@@ -20,15 +20,4 @@ public abstract class AuditableEntity {
     @Column(name = "updated_at")
     @LastModifiedDate
     protected LocalDateTime updatedAt;
-
-
-    @PrePersist
-    void prePersist() {
-        createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }
