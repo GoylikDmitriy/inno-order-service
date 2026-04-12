@@ -91,6 +91,20 @@ class OrderControllerTest extends BaseIntegrationTest {
         when(userServiceClient.getUserByIdInternal(userId)).thenReturn(ResponseEntity.ok(response));
     }
 
+    private void mockUsersBatch(List<Long> userIds) {
+        List<UserResponse> users = userIds.stream()
+                .map(id -> new UserResponse(
+                        id,
+                        "Doe",
+                        "John",
+                        LocalDate.of(1999, 10, 2),
+                        "john@test.com",
+                        true))
+                .toList();
+
+        when(userServiceClient.getUsersByIdsInternal(userIds)).thenReturn(ResponseEntity.ok(users));
+    }
+
     @Test
     void createOrder_ShouldReturn201_WhenValidRequest() throws Exception {
         String requestJson = """
@@ -244,8 +258,7 @@ class OrderControllerTest extends BaseIntegrationTest {
         createTestOrder(USER_ID);
         createTestOrder(ADMIN_USER_ID);
 
-        mockUserExists(USER_ID);
-        mockUserExists(ADMIN_USER_ID);
+        mockUsersBatch(List.of(USER_ID, ADMIN_USER_ID));
 
         mockMvc.perform(withAdmin(get(BASE_URL)))
                 .andExpect(status().isOk())
@@ -273,7 +286,7 @@ class OrderControllerTest extends BaseIntegrationTest {
         order2.setStatus(OrderStatus.PENDING);
         orderRepository.save(order2);
 
-        mockUserExists(USER_ID);
+        mockUsersBatch(List.of(USER_ID));
 
         mockMvc.perform(withAdmin(get(BASE_URL).param("statuses", "CONFIRMED")))
                 .andExpect(status().isOk())
@@ -295,7 +308,7 @@ class OrderControllerTest extends BaseIntegrationTest {
         order3.setStatus(OrderStatus.CANCELLED);
         orderRepository.save(order3);
 
-        mockUserExists(USER_ID);
+        mockUsersBatch(List.of(USER_ID));
 
         mockMvc.perform(withAdmin(get(BASE_URL)
                         .param("statuses", "CONFIRMED,PENDING")))
@@ -317,7 +330,7 @@ class OrderControllerTest extends BaseIntegrationTest {
             createTestOrder(USER_ID);
         }
 
-        mockUserExists(USER_ID);
+        mockUsersBatch(List.of(USER_ID));
 
         mockMvc.perform(withAdmin(get(BASE_URL)
                         .param("page", "1")
@@ -344,7 +357,7 @@ class OrderControllerTest extends BaseIntegrationTest {
         order3.setCreatedAt(LocalDateTime.now());
         orderRepository.save(order3);
 
-        mockUserExists(USER_ID);
+        mockUsersBatch(List.of(USER_ID));
 
         mockMvc.perform(withAdmin(get(BASE_URL)
                         .param("sort", "createdAt,desc")))
@@ -357,7 +370,7 @@ class OrderControllerTest extends BaseIntegrationTest {
         createTestOrder(USER_ID);
         createTestOrder(USER_ID);
 
-        mockUserExists(USER_ID);
+        mockUsersBatch(List.of(USER_ID));
 
         mockMvc.perform(withUser(USER_ID, get(BASE_URL + "/users/" + USER_ID)))
                 .andExpect(status().isOk())
@@ -370,7 +383,7 @@ class OrderControllerTest extends BaseIntegrationTest {
         createTestOrder(USER_ID);
         createTestOrder(USER_ID);
 
-        mockUserExists(USER_ID);
+        mockUsersBatch(List.of(USER_ID));
 
         mockMvc.perform(withAdmin(get(BASE_URL + "/users/" + USER_ID)))
                 .andExpect(status().isOk())
@@ -589,6 +602,7 @@ class OrderControllerTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CONFIRMED"));
 
+        mockUsersBatch(List.of(USER_ID));
         mockMvc.perform(withUser(USER_ID, get(BASE_URL + "/users/" + USER_ID)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))

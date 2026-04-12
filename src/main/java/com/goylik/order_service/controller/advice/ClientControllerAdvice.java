@@ -23,6 +23,39 @@ public class ClientControllerAdvice {
         );
     }
 
+    @ExceptionHandler(FeignException.NotFound.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNotFound(FeignException.NotFound ex) {
+        log.debug("Resource not found: {}", ex.getMessage());
+        return ErrorResponse.of(
+                HttpStatus.NOT_FOUND.value(),
+                "Resource not found",
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(FeignException.BadRequest.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBadRequest(FeignException.BadRequest ex) {
+        log.debug("Bad request: {}", ex.getMessage());
+        return ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad request",
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(FeignException.Conflict.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleConflict(FeignException.Conflict ex) {
+        log.debug("Conflict: {}", ex.getMessage());
+        return ErrorResponse.of(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage()
+        );
+    }
+
     @ExceptionHandler(FeignException.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public ErrorResponse handleFeignException(FeignException ex) {

@@ -17,7 +17,7 @@ import com.goylik.order_service.model.entity.OrderItem;
 import com.goylik.order_service.model.enums.OrderStatus;
 import com.goylik.order_service.repository.ItemRepository;
 import com.goylik.order_service.repository.OrderRepository;
-import com.goylik.order_service.service.impl.OrderServiceImpl;
+import com.goylik.order_service.service.impl.OrderTransactionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +28,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,7 +49,7 @@ class OrderServiceTest {
     @Mock private UserServiceClient userServiceClient;
 
     @InjectMocks
-    private OrderServiceImpl orderService;
+    private OrderTransactionService orderService;
 
     private static final Long ORDER_ID = 1L;
     private static final Long USER_ID = 100L;
@@ -124,8 +123,6 @@ class OrderServiceTest {
                 .thenReturn(List.of(item1, item2));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
-        when(userServiceClient.getUserByIdInternal(USER_ID))
-                .thenReturn(ResponseEntity.ok(userResponse));
 
         OrderResponse result = orderService.createOrder(request);
 
@@ -154,8 +151,6 @@ class OrderServiceTest {
     void getOrderById_ShouldReturnOrderResponse_WhenOrderExists() {
         when(orderRepository.findByIdWithItems(ORDER_ID)).thenReturn(Optional.of(order));
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
-        when(userServiceClient.getUserByIdInternal(USER_ID))
-                .thenReturn(ResponseEntity.ok(userResponse));
 
         OrderResponse result = orderService.getOrderById(ORDER_ID);
 
@@ -178,13 +173,14 @@ class OrderServiceTest {
     void getAll_ShouldReturnPageOfOrderResponses() {
         Pageable pageable = Pageable.ofSize(10);
         FilterRequest filterRequest = new FilterRequest(null, null, null);
-        Page<Order> orderPage = new PageImpl<>(List.of(order), pageable, 1);
+        List<Order> orders = List.of(order);
+        Page<Order> ordersPage = new PageImpl<>(orders, pageable, 1);
+        List<Long> ids = List.of(ORDER_ID);
 
         when(orderRepository.findAll(any(Specification.class), eq(pageable)))
-                .thenReturn(orderPage);
+                .thenReturn(ordersPage);
+        when(orderRepository.findOrdersWithItemsByIds(ids)).thenReturn(orders);
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
-        when(userServiceClient.getUserByIdInternal(USER_ID))
-                .thenReturn(ResponseEntity.ok(userResponse));
 
         Page<OrderResponse> result = orderService.getAll(pageable, filterRequest);
 
@@ -192,24 +188,26 @@ class OrderServiceTest {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).user()).isEqualTo(userResponse);
         verify(orderRepository).findAll(any(Specification.class), eq(pageable));
+        verify(orderRepository).findOrdersWithItemsByIds(ids);
     }
 
     @Test
     void getOrdersByUserId_ShouldReturnPageOfOrderResponses() {
         Pageable pageable = Pageable.ofSize(10);
-        Page<Order> orderPage = new PageImpl<>(List.of(order), pageable, 1);
+        Page<Long> idsPage = new PageImpl<>(List.of(ORDER_ID), pageable, 1);
+        List<Order> orders = List.of(order);
 
-        when(orderRepository.findByUserId(USER_ID, pageable)).thenReturn(orderPage);
+        when(orderRepository.findAllOrderIdsByUserId(USER_ID, pageable)).thenReturn(idsPage);
+        when(orderRepository.findOrdersWithItemsByIds(idsPage.getContent())).thenReturn(orders);
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
-        when(userServiceClient.getUserByIdInternal(USER_ID))
-                .thenReturn(ResponseEntity.ok(userResponse));
 
         Page<OrderResponse> result = orderService.getOrdersByUserId(USER_ID, pageable);
 
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).userId()).isEqualTo(USER_ID);
-        verify(orderRepository).findByUserId(USER_ID, pageable);
+        verify(orderRepository).findAllOrderIdsByUserId(USER_ID, pageable);
+        verify(orderRepository).findOrdersWithItemsByIds(idsPage.getContent());
     }
 
     @Test
@@ -219,8 +217,6 @@ class OrderServiceTest {
         when(orderRepository.findByIdWithItems(ORDER_ID)).thenReturn(Optional.of(order));
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
-        when(userServiceClient.getUserByIdInternal(USER_ID))
-                .thenReturn(ResponseEntity.ok(userResponse));
 
         orderService.updateOrder(ORDER_ID, request);
 
@@ -239,8 +235,6 @@ class OrderServiceTest {
         when(itemRepository.findAllById(List.of(ITEM_ID_1))).thenReturn(List.of(item1));
         when(orderRepository.save(order)).thenReturn(order);
         when(orderMapper.toResponse(order)).thenReturn(orderResponse);
-        when(userServiceClient.getUserByIdInternal(USER_ID))
-                .thenReturn(ResponseEntity.ok(userResponse));
 
         orderService.updateOrder(ORDER_ID, request);
 
