@@ -97,4 +97,76 @@ class ClientControllerAdviceTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.status").value(503))
                 .andExpect(jsonPath("$.error").value("User service error"));
     }
+
+    @Test
+    void shouldReturn404_WhenUserServiceReturnsNotFound() throws Exception {
+        Order order = createTestOrder();
+
+        when(userServiceClient.getUserByIdInternal(USER_ID))
+                .thenThrow(FeignException.errorStatus("getUserByIdInternal",
+                        feign.Response.builder()
+                                .status(404)
+                                .reason("Not Found")
+                                .request(feign.Request.create(
+                                        feign.Request.HttpMethod.GET,
+                                        "/api/users/internal/" + USER_ID,
+                                        java.util.Collections.emptyMap(),
+                                        null,
+                                        null,
+                                        null))
+                                .build()));
+
+        mockMvc.perform(withUser(USER_ID, get(BASE_URL + "/" + order.getId())))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Resource not found"));
+    }
+
+    @Test
+    void shouldReturn400_WhenUserServiceReturnsBadRequest() throws Exception {
+        Order order = createTestOrder();
+
+        when(userServiceClient.getUserByIdInternal(USER_ID))
+                .thenThrow(FeignException.errorStatus("getUserByIdInternal",
+                        feign.Response.builder()
+                                .status(400)
+                                .reason("Bad Request")
+                                .request(feign.Request.create(
+                                        feign.Request.HttpMethod.GET,
+                                        "/api/users/internal/" + USER_ID,
+                                        java.util.Collections.emptyMap(),
+                                        null,
+                                        null,
+                                        null))
+                                .build()));
+
+        mockMvc.perform(withUser(USER_ID, get(BASE_URL + "/" + order.getId())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad request"));
+    }
+
+    @Test
+    void shouldReturn409_WhenUserServiceReturnsConflict() throws Exception {
+        Order order = createTestOrder();
+
+        when(userServiceClient.getUserByIdInternal(USER_ID))
+                .thenThrow(FeignException.errorStatus("getUserByIdInternal",
+                        feign.Response.builder()
+                                .status(409)
+                                .reason("Conflict")
+                                .request(feign.Request.create(
+                                        feign.Request.HttpMethod.GET,
+                                        "/api/users/internal/" + USER_ID,
+                                        java.util.Collections.emptyMap(),
+                                        null,
+                                        null,
+                                        null))
+                                .build()));
+
+        mockMvc.perform(withUser(USER_ID, get(BASE_URL + "/" + order.getId())))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"));
+    }
 }
