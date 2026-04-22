@@ -18,6 +18,8 @@ spring:
     openfeign:
       circuitbreaker:
         enabled: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
 
 resilience4j:
   circuitbreaker:
