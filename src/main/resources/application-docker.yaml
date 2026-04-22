@@ -34,8 +34,8 @@ server:
   port: 8083
 
 client:
-  user-service:
-    url: ${CLIENT_USER_SERVICE_URL}
+  gateway:
+    url: ${GATEWAY_URL:http://localhost:8080}
 
 app:
   internal:

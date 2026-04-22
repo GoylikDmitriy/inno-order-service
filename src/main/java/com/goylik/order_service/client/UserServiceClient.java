@@ -13,7 +13,7 @@ import java.util.List;
 
 @FeignClient(
         name = "user-service",
-        url = "${client.user-service.url}",
+        url = "${client.gateway.url}",
         fallback = UserServiceClientFallback.class,
         configuration = UserServiceFeignConfig.class)
 public interface UserServiceClient {
