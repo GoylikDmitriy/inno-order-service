@@ -51,6 +51,21 @@ kafka:
   topics:
     payment-created: payment.created
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      show-components: always
+  info:
+    env:
+      enabled: true
+
 server:
   port: 8083
 
